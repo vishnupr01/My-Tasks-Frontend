@@ -116,11 +116,9 @@ export default function TasksPage() {
       {/* Header / navbar */}
       <header className="border-b border-green-900/40 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <span className="text-green-500 text-lg font-bold">&gt;_</span>
-            <span className="text-green-400 font-bold tracking-widest text-sm">TASKFLOW</span>
-            <span className="text-green-900 text-xs hidden sm:block">// personal task manager</span>
+          <div>
+            <span className="text-green-400 font-bold tracking-widest text-sm">MY_TASKS</span>
+            <span className="text-green-900 text-xs hidden sm:inline ml-2">// personal task manager</span>
           </div>
 
           {/* Streak */}

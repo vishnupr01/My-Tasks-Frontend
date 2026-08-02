@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AuthForm from '@/components/AuthForm';
 import { auth } from '@/lib/api';
-import { setToken } from '@/lib/auth';
+import { setToken, setUser } from '@/lib/auth';
 
 const terminalLines = [
   { prompt: '$', cmd: 'taskflow --init', delay: 0 },
@@ -31,6 +31,7 @@ export default function LoginPage() {
     try {
       const res = await auth.login(email, password);
       setToken(res.token);
+      setUser(res.user);
       router.push('/tasks');
     } catch (err: any) {
       setError(err.message || 'Login failed');

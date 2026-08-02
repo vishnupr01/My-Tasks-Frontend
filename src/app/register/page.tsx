@@ -5,19 +5,26 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AuthForm from '@/components/AuthForm';
 import { auth } from '@/lib/api';
-import { setToken } from '@/lib/auth';
+import { setToken, setUser } from '@/lib/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (email: string, password: string, name?: string) => {
+  const handleRegister = async (
+    email: string,
+    password: string,
+    name?: string,
+    username?: string,
+    inviteCode?: string,
+  ) => {
     setError('');
     setLoading(true);
     try {
-      const res = await auth.register(email, password, name);
+      const res = await auth.register(email, username!, password, name, inviteCode);
       setToken(res.token);
+      setUser(res.user);
       router.push('/tasks');
     } catch (err: any) {
       setError(err.message || 'Registration failed');

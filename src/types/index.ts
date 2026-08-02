@@ -4,7 +4,37 @@ export type Status = 'TODO' | 'IN_PROGRESS' | 'DONE';
 export interface User {
   id: string;
   email: string;
+  username: string;
   name?: string;
+  isAdmin: boolean;
+  createdAt: string;
+}
+
+export type AccessRequestStatus = 'PENDING' | 'APPROVED' | 'DECLINED';
+
+export interface AccessRequest {
+  id: string;
+  email: string;
+  status: AccessRequestStatus;
+  createdAt: string;
+  decidedAt?: string;
+  decidedBy?: { id: string; username: string } | null;
+}
+
+export interface InviteCode {
+  id: string;
+  code: string;
+  createdAt: string;
+  usedAt?: string;
+  usedBy?: { id: string; username: string; email: string } | null;
+}
+
+export interface Member {
+  id: string;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  isActive: boolean;
   createdAt: string;
 }
 

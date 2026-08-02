@@ -1,23 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { auth } from '@/lib/api';
+
+const USERNAME_RE = /^[a-z0-9._]{3,20}$/;
 
 interface AuthFormProps {
   mode: 'login' | 'register';
-  onSubmit: (email: string, password: string, name?: string) => Promise<void>;
+  onSubmit: (email: string, password: string, name?: string, username?: string, inviteCode?: string) => Promise<void>;
   error?: string;
   loading?: boolean;
 }
 
+type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken';
+
 export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormProps) {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+
+  const usernameDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (mode !== 'register') return;
+
+    if (usernameDebounce.current) clearTimeout(usernameDebounce.current);
+
+    if (!USERNAME_RE.test(username)) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    usernameDebounce.current = setTimeout(async () => {
+      try {
+        const res = await auth.checkUsername(username);
+        setUsernameStatus(res.available ? 'available' : 'taken');
+      } catch {
+        setUsernameStatus('idle');
+      }
+    }, 500);
+
+    return () => { if (usernameDebounce.current) clearTimeout(usernameDebounce.current); };
+  }, [username, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(email, password, mode === 'register' ? name : undefined);
+    await onSubmit(
+      email,
+      password,
+      mode === 'register' ? name : undefined,
+      mode === 'register' ? username : undefined,
+      mode === 'register' ? inviteCode : undefined,
+    );
   };
 
   const inputCls = "w-full px-3 py-2.5 bg-black border border-green-900 rounded text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all font-mono text-sm";
@@ -26,8 +66,47 @@ export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormPro
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'register' && (
         <div className="space-y-1">
+          <label className="block text-xs text-green-700 uppercase tracking-widest">// username</label>
+          <input
+            type="text"
+            required
+            pattern="[a-z0-9._]{3,20}"
+            title="3-20 characters: lowercase letters, numbers, . or _"
+            value={username}
+            onChange={e => setUsername(e.target.value.toLowerCase())}
+            className={inputCls}
+            placeholder="your_handle"
+          />
+          {usernameStatus === 'checking' && <p className="text-xs text-green-800">checking availability...</p>}
+          {usernameStatus === 'available' && <p className="text-xs text-green-500">✓ available</p>}
+          {usernameStatus === 'taken' && <p className="text-xs text-red-400">✗ username already taken</p>}
+        </div>
+      )}
+
+      {mode === 'register' && (
+        <div className="space-y-1">
           <label className="block text-xs text-green-700 uppercase tracking-widest">// name <span className="text-green-900 normal-case">(optional)</span></label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputCls} placeholder="your_name" />
+        </div>
+      )}
+
+      {mode === 'register' && (
+        <div className="space-y-1">
+          <label className="block text-xs text-green-700 uppercase tracking-widest">// invite code <span className="text-green-900 normal-case">(if you have one)</span></label>
+          <input
+            type="text"
+            value={inviteCode}
+            onChange={e => setInviteCode(e.target.value.trim())}
+            className={inputCls}
+            placeholder="leave blank if you were approved by email"
+          />
+          <p className="text-xs text-green-900">
+            no code?{' '}
+            <Link href="/request-access" className="text-green-600 hover:text-green-400 transition-colors">
+              request access
+            </Link>{' '}
+            first.
+          </p>
         </div>
       )}
 
@@ -63,7 +142,7 @@ export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormPro
         </div>
       )}
 
-      <button type="submit" disabled={loading}
+      <button type="submit" disabled={loading || (mode === 'register' && usernameStatus === 'taken')}
         className="w-full py-2.5 px-4 bg-green-500 text-black font-bold text-sm rounded hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_16px_rgba(34,197,94,0.25)] hover:shadow-[0_0_24px_rgba(34,197,94,0.4)] active:scale-[0.98] uppercase tracking-widest">
         {loading ? (
           <span className="flex items-center justify-center gap-2">
