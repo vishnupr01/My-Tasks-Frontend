@@ -38,6 +38,41 @@ export interface Member {
   createdAt: string;
 }
 
+export interface Channel {
+  id: string;
+  name: string;
+  description?: string;
+  isPrivate: boolean;
+  createdById: string;
+  createdAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  content: string;
+  channelId: string;
+  authorId: string;
+  author: { id: string; username: string; name?: string };
+  createdAt: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  createdAt: string;
+  users: { user: { id: string; username: string } }[];
+}
+
+export interface ChannelAccessGrant {
+  id: string;
+  channelId: string;
+  userId?: string;
+  roleId?: string;
+  user?: { id: string; username: string; email: string } | null;
+  role?: { id: string; name: string } | null;
+  createdAt: string;
+}
+
 export interface SubTask {
   id: string;
   title: string;

@@ -62,7 +62,7 @@ export default function FindUsersPage() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="search_users..."
-          className="w-full px-3 py-2.5 bg-black border border-green-900 rounded-sm text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all font-mono text-sm"
+          className="w-full px-3 py-2.5 bg-black border border-green-900 rounded-sm text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] transition-all font-mono text-sm"
         />
 
         {loading && (

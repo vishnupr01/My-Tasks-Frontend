@@ -33,7 +33,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
               onClick={() => onChange({ ...filters, status: opt.value as Status | '' })}
               className={`px-3 py-1 rounded-sm text-xs transition-all ${
                 active
-                  ? 'bg-green-500 text-black font-bold shadow-[0_0_8px_rgba(34,197,94,0.3)]'
+                  ? 'bg-green-500 text-black font-bold shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.3*var(--glow-mult)))]'
                   : 'text-green-700 hover:text-green-400 hover:bg-green-950/40'
               }`}>
               {active ? `[${opt.label}]` : opt.label}
@@ -51,7 +51,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
               onClick={() => onChange({ ...filters, priority: opt.value as Priority | '' })}
               className={`px-3 py-1 rounded-sm text-xs transition-all ${
                 active
-                  ? 'bg-green-500 text-black font-bold shadow-[0_0_8px_rgba(34,197,94,0.3)]'
+                  ? 'bg-green-500 text-black font-bold shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.3*var(--glow-mult)))]'
                   : 'text-green-700 hover:text-green-400 hover:bg-green-950/40'
               }`}>
               {active ? `[${opt.label}]` : opt.label}

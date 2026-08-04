@@ -37,7 +37,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex bg-black font-mono">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 flex-col bg-black border-r border-green-900/40 p-10">
-        <div className="border border-green-900/50 rounded-sm overflow-hidden flex-1 flex flex-col shadow-[0_0_40px_rgba(34,197,94,0.05)]">
+        <div className="border border-green-900/50 rounded-sm overflow-hidden flex-1 flex flex-col shadow-[0_0_40px_rgba(var(--glow-rgb),calc(0.05*var(--glow-mult)))]">
           <div className="flex items-center gap-2 px-4 py-2 border-b border-green-900/50 bg-green-950/20">
             <div className="flex gap-1.5">
               <span className="w-3 h-3 rounded-full bg-red-900/60 border border-red-800/40" />

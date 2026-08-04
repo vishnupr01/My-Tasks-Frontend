@@ -54,7 +54,7 @@ export default function RequestAccessPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-3 py-2.5 bg-black border border-green-900 rounded text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all font-mono text-sm"
+                className="w-full px-3 py-2.5 bg-black border border-green-900 rounded text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] transition-all font-mono text-sm"
                 placeholder="user@domain.com"
               />
             </div>
@@ -68,7 +68,7 @@ export default function RequestAccessPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-green-500 text-black font-bold text-sm rounded hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_16px_rgba(34,197,94,0.25)] uppercase tracking-widest"
+              className="w-full py-2.5 px-4 bg-green-500 text-black font-bold text-sm rounded hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_16px_rgba(var(--glow-rgb),calc(0.25*var(--glow-mult)))] uppercase tracking-widest"
             >
               {loading ? 'submitting...' : '> request_access'}
             </button>

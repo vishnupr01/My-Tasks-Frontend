@@ -1,5 +1,5 @@
 import { getToken, removeToken } from './auth';
-import type { Task, AuthResponse, TaskFilters, StreakData, SubTask, AccessRequest, InviteCode, AccessRequestStatus, Member } from '@/types';
+import type { Task, AuthResponse, TaskFilters, StreakData, SubTask, AccessRequest, InviteCode, AccessRequestStatus, Member, Channel, ChatMessage, Role, ChannelAccessGrant } from '@/types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -78,6 +78,41 @@ export const users = {
     request<{ id: string; name: string | null; username: string }[]>(
       `/users/search?q=${encodeURIComponent(q)}`,
     ),
+};
+
+export const channels = {
+  list: () => request<Channel[]>('/channels'),
+
+  create: (name: string, isPrivate: boolean, description?: string) =>
+    request<Channel>('/channels', { method: 'POST', body: JSON.stringify({ name, isPrivate, description }) }),
+
+  listMessages: (channelId: string) => request<ChatMessage[]>(`/channels/${channelId}/messages`),
+
+  sendMessage: (channelId: string, content: string) =>
+    request<ChatMessage>(`/channels/${channelId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+
+  listAccess: (channelId: string) => request<ChannelAccessGrant[]>(`/channels/${channelId}/access`),
+
+  grantAccessToUser: (channelId: string, userId: string) =>
+    request<ChannelAccessGrant>(`/channels/${channelId}/access`, { method: 'POST', body: JSON.stringify({ userId }) }),
+
+  grantAccessToRole: (channelId: string, roleId: string) =>
+    request<ChannelAccessGrant>(`/channels/${channelId}/access`, { method: 'POST', body: JSON.stringify({ roleId }) }),
+
+  revokeAccess: (channelId: string, accessId: string) =>
+    request<{ message: string }>(`/channels/${channelId}/access/${accessId}`, { method: 'DELETE' }),
+};
+
+export const roles = {
+  list: () => request<Role[]>('/roles'),
+
+  create: (name: string) => request<Role>('/roles', { method: 'POST', body: JSON.stringify({ name }) }),
+
+  assignUser: (roleId: string, userId: string) =>
+    request<{ userId: string; roleId: string }>(`/roles/${roleId}/users`, { method: 'POST', body: JSON.stringify({ userId }) }),
+
+  removeUser: (roleId: string, userId: string) =>
+    request<{ message: string }>(`/roles/${roleId}/users/${userId}`, { method: 'DELETE' }),
 };
 
 export const tasks = {

@@ -11,6 +11,7 @@ import FilterBar from '@/components/FilterBar';
 import SearchBar from '@/components/SearchBar';
 import ConfirmModal from '@/components/ConfirmModal';
 import StreakCalendar from '@/components/StreakCalendar';
+import { FlameIcon } from '@/components/Icons';
 
 const columns = [
   { key: 'TODO' as Task['status'],        label: 'TODO',        prefix: '01', border: 'border-green-900/30', bg: 'bg-black' },
@@ -123,7 +124,7 @@ export default function TasksPage() {
 
           {/* Streak */}
           <div className="hidden sm:flex items-center gap-3 border border-green-900/50 rounded-sm px-3 py-1.5 text-xs">
-            <span className="text-yellow-500">🔥</span>
+            <span className="text-yellow-500"><FlameIcon /></span>
             <div className="flex items-baseline gap-1">
               <span className="text-green-400 font-bold text-base">{streak.current}</span>
               <span className="text-green-800">day_streak</span>
@@ -134,7 +135,7 @@ export default function TasksPage() {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <button onClick={() => setShowCreateModal(true)}
-              className="text-xs font-bold px-4 py-1.5 bg-green-500 text-black rounded-sm hover:bg-green-400 transition-colors shadow-[0_0_12px_rgba(34,197,94,0.2)] hover:shadow-[0_0_20px_rgba(34,197,94,0.35)] uppercase tracking-widest">
+              className="text-xs font-bold px-4 py-1.5 bg-green-500 text-black rounded-sm hover:bg-green-400 transition-colors shadow-[0_0_12px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] hover:shadow-[0_0_20px_rgba(var(--glow-rgb),calc(0.35*var(--glow-mult)))] uppercase tracking-widest">
               + new_task
             </button>
             <button onClick={handleLogout}
@@ -174,7 +175,7 @@ export default function TasksPage() {
             <div className="flex items-center gap-2">
               <span className="text-green-500">$</span>
               <span className="text-green-700 tracking-widest">streak.calendar</span>
-              <span className="text-yellow-500">🔥</span>
+              <span className="text-yellow-500"><FlameIcon /></span>
               <span className="text-green-400 font-bold">{streak.current}</span>
               <span className="text-green-800">day streak</span>
               <span className="text-green-900">|</span>
@@ -189,11 +190,11 @@ export default function TasksPage() {
                 <span>less</span>
                 {[0, 1, 2, 4, 7].map(n => (
                   <div key={n} className={`w-3 h-3 border rounded-[2px] ${
-                    n === 0 ? 'bg-green-950/30 border-green-950/40'
-                    : n === 1 ? 'bg-green-900 border-green-800'
-                    : n === 2 ? 'bg-green-700 border-green-600'
-                    : n === 4 ? 'bg-green-500 border-green-400'
-                    : 'bg-green-300 border-green-200'
+                    n === 0 ? 'bg-[rgb(var(--heat-0-bg))] border-[rgb(var(--heat-0-bd))]'
+                    : n === 1 ? 'bg-[rgb(var(--heat-1-bg))] border-[rgb(var(--heat-1-bd))]'
+                    : n === 2 ? 'bg-[rgb(var(--heat-2-bg))] border-[rgb(var(--heat-2-bd))]'
+                    : n === 4 ? 'bg-[rgb(var(--heat-3-bg))] border-[rgb(var(--heat-3-bd))]'
+                    : 'bg-[rgb(var(--heat-4-bg))] border-[rgb(var(--heat-4-bd))]'
                   }`} />
                 ))}
                 <span>more</span>
@@ -256,7 +257,7 @@ export default function TasksPage() {
             <p className="text-green-800 text-sm mb-1">// no tasks found</p>
             <p className="text-green-900 text-xs mb-5">create your first task to get started</p>
             <button onClick={() => setShowCreateModal(true)}
-              className="text-xs font-bold px-5 py-2 bg-green-500 text-black rounded-sm hover:bg-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)] uppercase tracking-widest transition-colors">
+              className="text-xs font-bold px-5 py-2 bg-green-500 text-black rounded-sm hover:bg-green-400 shadow-[0_0_12px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] uppercase tracking-widest transition-colors">
               + new_task
             </button>
           </div>
@@ -267,7 +268,7 @@ export default function TasksPage() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={e => e.target === e.currentTarget && setShowCreateModal(false)}>
-          <div className="bg-black border border-green-900/60 rounded-sm shadow-[0_0_40px_rgba(34,197,94,0.08)] w-full max-w-md">
+          <div className="bg-black border border-green-900/60 rounded-sm shadow-[0_0_40px_rgba(var(--glow-rgb),calc(0.08*var(--glow-mult)))] w-full max-w-md">
             {/* Modal title bar */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-green-900/40 bg-green-950/10">
               <div className="flex items-center gap-2">

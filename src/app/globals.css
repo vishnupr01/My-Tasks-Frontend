@@ -2,20 +2,116 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Theme tokens. Every `bg-black`, `text-green-400`, `border-green-900/40` etc.
+ * class already used throughout the app resolves through these variables, so
+ * switching [data-theme] repaints the whole UI without touching component files.
+ * Each shade keeps its role (e.g. 400 = prominent text, 900/950 = near-invisible)
+ * across both themes -- only which end of the scale is "prominent" flips.
+ */
+:root {
+  --c-black: 0 0 0;
+  --c-green-200: 187 247 208;
+  --c-green-300: 134 239 172;
+  --c-green-400: 74 222 128;
+  --c-green-500: 34 197 94;
+  --c-green-600: 22 163 74;
+  --c-green-700: 21 128 61;
+  --c-green-800: 22 101 52;
+  --c-green-900: 20 83 45;
+  --c-green-950: 5 46 22;
+
+  /* used by the hardcoded rgba() glow shadows sprinkled through component styles */
+  --glow-rgb: 34 197 94;
+  --glow-mult: 1;
+
+  /*
+   * StreakCalendar's 5-step heat scale gets its own dedicated tokens rather than
+   * reusing --c-green-*. That shared scale is tuned for text/border prominence,
+   * not for 5 mutually-distinguishable levels -- reusing it here caused two
+   * levels to collapse onto the same gray in the normal theme, and made the
+   * "0 activity" cell nearly invisible against a white page background.
+   */
+  --heat-0-bg: 10 31 15;   --heat-0-bd: 15 42 23;
+  --heat-1-bg: 20 83 45;   --heat-1-bd: 22 101 52;
+  --heat-2-bg: 21 128 61;  --heat-2-bd: 22 163 74;
+  --heat-3-bg: 34 197 94;  --heat-3-bd: 74 222 128;
+  --heat-4-bg: 134 239 172; --heat-4-bd: 187 247 208;
+  --heat-today-bg: 74 222 128; --heat-today-bd: 134 239 172;
+
+  /* Terminal font in the hacker theme; overridden to a plain sans-serif elsewhere */
+  --theme-font: var(--font-mono), ui-monospace, Consolas, monospace;
+}
+
+[data-theme='normal'] {
+  --c-black: 255 255 255;
+  --c-green-200: 10 10 10;
+  --c-green-300: 23 23 23;
+  --c-green-400: 38 38 38;
+  --c-green-500: 23 23 23;
+  --c-green-600: 64 64 64;
+  --c-green-700: 82 82 82;
+  --c-green-800: 115 115 115;
+  --c-green-900: 140 140 140;
+  --c-green-950: 195 195 195;
+
+  --glow-rgb: 0 0 0;
+  --glow-mult: 0;
+
+  --heat-0-bg: 236 236 236; --heat-0-bd: 212 212 212;
+  --heat-1-bg: 199 199 199; --heat-1-bd: 163 163 163;
+  --heat-2-bg: 143 143 143; --heat-2-bd: 107 107 107;
+  --heat-3-bg: 82 82 82;    --heat-3-bd: 51 51 51;
+  --heat-4-bg: 23 23 23;    --heat-4-bd: 0 0 0;
+  --heat-today-bg: 255 255 255; --heat-today-bd: 0 0 0;
+
+  --theme-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/*
+ * Third theme: a conventional dark mode. Dark background like hacker, but
+ * neutral gray/white instead of green, no glow, and the plain sans-serif font
+ * like the normal theme -- "professional dark," not "hacker with less color."
+ */
+[data-theme='dark'] {
+  --c-black: 13 13 13;
+  --c-green-200: 250 250 250;
+  --c-green-300: 229 229 229;
+  --c-green-400: 212 212 212;
+  --c-green-500: 163 163 163;
+  --c-green-600: 130 130 130;
+  --c-green-700: 100 100 100;
+  --c-green-800: 75 75 75;
+  --c-green-900: 60 60 60;
+  --c-green-950: 42 42 42;
+
+  --glow-rgb: 255 255 255;
+  --glow-mult: 0;
+
+  --heat-0-bg: 25 25 25;    --heat-0-bd: 38 38 38;
+  --heat-1-bg: 60 60 60;    --heat-1-bd: 78 78 78;
+  --heat-2-bg: 95 95 95;    --heat-2-bd: 118 118 118;
+  --heat-3-bg: 150 150 150; --heat-3-bd: 180 180 180;
+  --heat-4-bg: 220 220 220; --heat-4-bd: 245 245 245;
+  --heat-today-bg: 245 245 245; --heat-today-bd: 255 255 255;
+
+  --theme-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #14532d transparent;
+    scrollbar-color: rgb(var(--c-green-900)) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar { width: 4px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-  .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #14532d; border-radius: 2px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background-color: rgb(var(--c-green-900)); border-radius: 2px; }
 
   .glow-green {
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.15);
+    box-shadow: 0 0 12px rgba(var(--glow-rgb),calc(0.15*var(--glow-mult)));
   }
   .glow-green-sm {
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.1);
+    box-shadow: 0 0 6px rgba(var(--glow-rgb),calc(0.1*var(--glow-mult)));
   }
 
   /* blinking cursor */

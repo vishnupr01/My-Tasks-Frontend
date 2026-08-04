@@ -55,7 +55,7 @@ export default function TaskCard({ task, onDelete, onStatusChange, onSubTaskAdd,
   };
 
   return (
-    <div className={`group font-mono bg-black border border-green-900/40 border-l-4 ${priority.border} rounded-sm hover:border-green-700/60 hover:shadow-[0_0_12px_rgba(34,197,94,0.07)] transition-all ${task.status === 'DONE' ? 'opacity-40' : ''}`}>
+    <div className={`group font-mono bg-black border border-green-900/40 border-l-4 ${priority.border} rounded-sm hover:border-green-700/60 hover:shadow-[0_0_12px_rgba(var(--glow-rgb),calc(0.07*var(--glow-mult)))] transition-all ${task.status === 'DONE' ? 'opacity-40' : ''}`}>
       <div className="p-3 flex flex-col gap-2">
 
         {/* ID + title */}
@@ -108,7 +108,7 @@ export default function TaskCard({ task, onDelete, onStatusChange, onSubTaskAdd,
               [+sub]
             </button>
             <button onClick={() => onStatusChange(task.id, status.next)}
-              className="text-xs px-2 py-0.5 border border-green-800/60 text-green-700 hover:border-green-500 hover:text-green-400 hover:shadow-[0_0_6px_rgba(34,197,94,0.15)] rounded-sm transition-all">
+              className="text-xs px-2 py-0.5 border border-green-800/60 text-green-700 hover:border-green-500 hover:text-green-400 hover:shadow-[0_0_6px_rgba(var(--glow-rgb),calc(0.15*var(--glow-mult)))] rounded-sm transition-all">
               &gt; {status.nextLabel}
             </button>
           </div>

@@ -2,15 +2,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { admin } from '@/lib/api';
+import { admin, roles as rolesApi } from '@/lib/api';
 import { isAuthenticated, getUser } from '@/lib/auth';
-import type { AccessRequest, InviteCode, Member } from '@/types';
+import UserPicker from '@/components/UserPicker';
+import type { AccessRequest, InviteCode, Member, Role } from '@/types';
 
 export default function AdminPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [allRoles, setAllRoles] = useState<Role[]>([]);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [creatingRole, setCreatingRole] = useState(false);
+  const [addingToRole, setAddingToRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -25,10 +30,16 @@ export default function AdminPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [r, c, m] = await Promise.all([admin.listAccessRequests(), admin.listInviteCodes(), admin.listUsers()]);
+      const [r, c, m, ro] = await Promise.all([
+        admin.listAccessRequests(),
+        admin.listInviteCodes(),
+        admin.listUsers(),
+        rolesApi.list(),
+      ]);
       setRequests(r);
       setCodes(c);
       setMembers(m);
+      setAllRoles(ro);
     } catch { /* guard redirect already handles unauthorized */ }
     finally { setLoading(false); }
   }, []);
@@ -59,6 +70,34 @@ export default function AdminPage() {
   const toggleActive = async (id: string, current: boolean) => {
     const updated = await admin.setUserActive(id, !current);
     setMembers(prev => prev.map(m => (m.id === id ? { ...m, isActive: updated.isActive } : m)));
+  };
+
+  const createRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) return;
+    setCreatingRole(true);
+    try {
+      const role = await rolesApi.create(newRoleName.trim());
+      setAllRoles(prev => [...prev, { ...role, users: [] }]);
+      setNewRoleName('');
+    } finally {
+      setCreatingRole(false);
+    }
+  };
+
+  const addUserToRole = async (roleId: string, user: { id: string; username: string }) => {
+    await rolesApi.assignUser(roleId, user.id);
+    setAllRoles(prev => prev.map(r =>
+      r.id === roleId ? { ...r, users: [...r.users, { user: { id: user.id, username: user.username } }] } : r
+    ));
+    setAddingToRole(null);
+  };
+
+  const removeUserFromRole = async (roleId: string, userId: string) => {
+    await rolesApi.removeUser(roleId, userId);
+    setAllRoles(prev => prev.map(r =>
+      r.id === roleId ? { ...r, users: r.users.filter(u => u.user.id !== userId) } : r
+    ));
   };
 
   const pending = requests.filter(r => r.status === 'PENDING');
@@ -170,6 +209,66 @@ export default function AdminPage() {
             ))}
           </div>
         </section>
+
+        {/* Roles */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-green-500 text-xs uppercase tracking-widest">roles</h2>
+            <span className="text-xs text-green-900">{allRoles.length} total</span>
+          </div>
+
+          <form onSubmit={createRole} className="flex gap-2">
+            <input
+              type="text"
+              value={newRoleName}
+              onChange={e => setNewRoleName(e.target.value)}
+              placeholder="new role name (e.g. vip)"
+              className="flex-1 px-3 py-2 bg-black border border-green-900 rounded-sm text-green-300 placeholder-green-900 text-sm font-mono focus:outline-none focus:border-green-500"
+            />
+            <button
+              type="submit"
+              disabled={creatingRole || !newRoleName.trim()}
+              className="text-xs px-4 bg-green-500 text-black font-bold rounded-sm hover:bg-green-400 disabled:opacity-40 transition-colors uppercase tracking-wide"
+            >
+              {creatingRole ? 'creating...' : '+ create'}
+            </button>
+          </form>
+
+          {allRoles.length === 0 && (
+            <p className="text-xs text-green-950">// no roles yet -- roles let you grant a whole group access to a channel at once</p>
+          )}
+
+          <div className="space-y-2">
+            {allRoles.map(r => (
+              <div key={r.id} className="border border-green-900/40 rounded-sm px-3 py-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-green-300 text-sm font-bold">{r.name}</span>
+                  <button
+                    onClick={() => setAddingToRole(addingToRole === r.id ? null : r.id)}
+                    className="text-[10px] text-green-800 hover:text-green-500 uppercase tracking-wide"
+                  >
+                    {addingToRole === r.id ? 'close' : '+ add member'}
+                  </button>
+                </div>
+
+                {addingToRole === r.id && (
+                  <UserPicker onSelect={u => addUserToRole(r.id, u)} placeholder="search users to add to this role..." />
+                )}
+
+                <div className="flex flex-wrap gap-1.5">
+                  {r.users.length === 0 && <span className="text-[10px] text-green-950">// nobody in this role yet</span>}
+                  {r.users.map(({ user }) => (
+                    <span key={user.id} className="flex items-center gap-1.5 text-[10px] text-green-700 border border-green-900/40 rounded-sm px-2 py-1">
+                      @{user.username}
+                      <button onClick={() => removeUserFromRole(r.id, user.id)} className="text-red-600 hover:text-red-400">&times;</button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Members */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">

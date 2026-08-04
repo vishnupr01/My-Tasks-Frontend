@@ -5,12 +5,12 @@ const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 function cellColor(count: number, isFuture: boolean, isToday: boolean): string {
   if (isFuture) return 'bg-transparent border-green-950/20';
-  if (isToday)  return 'bg-green-400 border-green-300 shadow-[0_0_5px_rgba(74,222,128,0.6)]';
-  if (count === 0) return 'bg-green-950/30 border-green-950/40';
-  if (count === 1) return 'bg-green-900   border-green-800';
-  if (count <= 3)  return 'bg-green-700   border-green-600';
-  if (count <= 6)  return 'bg-green-500   border-green-400';
-  return                  'bg-green-300   border-green-200';
+  if (isToday)  return 'bg-[rgb(var(--heat-today-bg))] border-2 border-[rgb(var(--heat-today-bd))] shadow-[0_0_5px_rgba(var(--glow-rgb),calc(0.6*var(--glow-mult)))]';
+  if (count === 0) return 'bg-[rgb(var(--heat-0-bg))] border-[rgb(var(--heat-0-bd))]';
+  if (count === 1) return 'bg-[rgb(var(--heat-1-bg))] border-[rgb(var(--heat-1-bd))]';
+  if (count <= 3)  return 'bg-[rgb(var(--heat-2-bg))] border-[rgb(var(--heat-2-bd))]';
+  if (count <= 6)  return 'bg-[rgb(var(--heat-3-bg))] border-[rgb(var(--heat-3-bd))]';
+  return                  'bg-[rgb(var(--heat-4-bg))] border-[rgb(var(--heat-4-bd))]';
 }
 
 interface Props {

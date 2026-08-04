@@ -28,7 +28,7 @@ export default function ConfirmModal({ message, subtext, confirmLabel = 'confirm
       className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={e => e.target === e.currentTarget && onCancel()}
     >
-      <div className="bg-black border border-green-900/60 rounded-sm shadow-[0_0_40px_rgba(34,197,94,0.06)] w-full max-w-sm font-mono">
+      <div className="bg-black border border-green-900/60 rounded-sm shadow-[0_0_40px_rgba(var(--glow-rgb),calc(0.06*var(--glow-mult)))] w-full max-w-sm font-mono">
         {/* Title bar */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-green-900/40 bg-green-950/10">
           <span className="text-yellow-500 text-xs">⚠</span>

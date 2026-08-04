@@ -36,7 +36,7 @@ export default function TaskForm({ initial = {}, onSubmit, onCancel, loading, er
     await onSubmit({ title, description: description || undefined, priority, status, dueDate: dueDate || undefined });
   };
 
-  const inputCls = "w-full px-3 py-2 bg-black border border-green-900/60 rounded-sm text-green-300 placeholder-green-900 text-sm focus:outline-none focus:border-green-500 focus:shadow-[0_0_6px_rgba(34,197,94,0.15)] transition-all font-mono";
+  const inputCls = "w-full px-3 py-2 bg-black border border-green-900/60 rounded-sm text-green-300 placeholder-green-900 text-sm focus:outline-none focus:border-green-500 focus:shadow-[0_0_6px_rgba(var(--glow-rgb),calc(0.15*var(--glow-mult)))] transition-all font-mono";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 font-mono">
@@ -70,7 +70,7 @@ export default function TaskForm({ initial = {}, onSubmit, onCancel, loading, er
               <button key={opt.value} type="button" onClick={() => setStatus(opt.value as Status)}
                 className={`px-3 py-1.5 rounded-sm text-xs font-bold border transition-all ${
                   status === opt.value
-                    ? 'bg-green-500 text-black border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.3)]'
+                    ? 'bg-green-500 text-black border-green-500 shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.3*var(--glow-mult)))]'
                     : 'bg-black text-green-800 border-green-900/50 hover:border-green-700 hover:text-green-500'
                 }`}>
                 {status === opt.value ? `[${opt.label}]` : opt.label}
@@ -99,7 +99,7 @@ export default function TaskForm({ initial = {}, onSubmit, onCancel, loading, er
           </button>
         )}
         <button type="submit" disabled={loading}
-          className="px-5 py-2 text-xs font-bold bg-green-500 text-black rounded-sm hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_12px_rgba(34,197,94,0.2)] hover:shadow-[0_0_20px_rgba(34,197,94,0.35)] transition-all uppercase tracking-widest">
+          className="px-5 py-2 text-xs font-bold bg-green-500 text-black rounded-sm hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_12px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] hover:shadow-[0_0_20px_rgba(var(--glow-rgb),calc(0.35*var(--glow-mult)))] transition-all uppercase tracking-widest">
           {loading ? 'saving...' : `> ${submitLabel}`}
         </button>
       </div>

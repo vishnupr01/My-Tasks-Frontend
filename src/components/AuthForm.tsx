@@ -60,7 +60,7 @@ export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormPro
     );
   };
 
-  const inputCls = "w-full px-3 py-2.5 bg-black border border-green-900 rounded text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all font-mono text-sm";
+  const inputCls = "w-full px-3 py-2.5 bg-black border border-green-900 rounded text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] transition-all font-mono text-sm";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -143,7 +143,7 @@ export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormPro
       )}
 
       <button type="submit" disabled={loading || (mode === 'register' && usernameStatus === 'taken')}
-        className="w-full py-2.5 px-4 bg-green-500 text-black font-bold text-sm rounded hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_16px_rgba(34,197,94,0.25)] hover:shadow-[0_0_24px_rgba(34,197,94,0.4)] active:scale-[0.98] uppercase tracking-widest">
+        className="w-full py-2.5 px-4 bg-green-500 text-black font-bold text-sm rounded hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_16px_rgba(var(--glow-rgb),calc(0.25*var(--glow-mult)))] hover:shadow-[0_0_24px_rgba(var(--glow-rgb),calc(0.4*var(--glow-mult)))] active:scale-[0.98] uppercase tracking-widest">
         {loading ? (
           <span className="flex items-center justify-center gap-2">
             <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
