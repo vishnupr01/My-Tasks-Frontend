@@ -1,7 +1,23 @@
 import { getToken, removeToken } from './auth';
-import type { Task, AuthResponse, TaskFilters, StreakData, SubTask, AccessRequest, InviteCode, AccessRequestStatus, Member, Channel, ChatMessage, Role, ChannelAccessGrant } from '@/types';
+import { getApiBaseUrl } from './api-url';
+import type { Task, AuthResponse, TaskFilters, StreakData, SubTask, AccessRequest, InviteCode, AccessRequestStatus, Member, Channel, ChatMessage, Role, ChannelAccessGrant, RoadmapSummary, RoadmapDetail, RoadmapCategoryDetail, RoadmapTopic, FriendUser, FriendRequestData, DirectMessageData, NotificationSummary, UserSettings, ChannelMember, MessagePage, AttachmentType, ChannelKind, CodeDocument } from '@/types';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export interface SendMessagePayload {
+  content?: string;
+  attachmentUrl?: string;
+  attachmentType?: AttachmentType;
+  attachmentName?: string;
+  attachmentDuration?: number;
+}
+
+function withCursorQuery(path: string, opts?: { limit?: number; before?: string }): string {
+  const params = new URLSearchParams();
+  if (opts?.limit) params.set('limit', String(opts.limit));
+  if (opts?.before) params.set('before', opts.before);
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
@@ -11,7 +27,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options.headers,
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${getApiBaseUrl()}${path}`, { ...options, headers });
 
   const data = await res.json();
 
@@ -64,6 +80,10 @@ export const admin = {
 
   createInviteCode: () => request<InviteCode>('/auth/invite-codes', { method: 'POST' }),
 
+  deleteInviteCode: (id: string) => request<{ id: string }>(`/auth/invite-codes/${id}`, { method: 'DELETE' }),
+
+  deleteAllInviteCodes: () => request<{ count: number }>('/auth/invite-codes', { method: 'DELETE' }),
+
   setUserActive: (userId: string, isActive: boolean) =>
     request<{ id: string; username: string; isActive: boolean }>(`/auth/users/${userId}/active`, {
       method: 'PATCH',
@@ -83,13 +103,23 @@ export const users = {
 export const channels = {
   list: () => request<Channel[]>('/channels'),
 
-  create: (name: string, isPrivate: boolean, description?: string) =>
-    request<Channel>('/channels', { method: 'POST', body: JSON.stringify({ name, isPrivate, description }) }),
+  create: (name: string, isPrivate: boolean, description?: string, kind: ChannelKind = 'TEXT') =>
+    request<Channel>('/channels', { method: 'POST', body: JSON.stringify({ name, isPrivate, description, kind }) }),
 
-  listMessages: (channelId: string) => request<ChatMessage[]>(`/channels/${channelId}/messages`),
+  // CODE channels only -- the server 400s for TEXT channels. The document
+  // is created on first read, so this never 404s for a valid code channel.
+  getCode: (channelId: string) => request<CodeDocument>(`/channels/${channelId}/code`),
 
-  sendMessage: (channelId: string, content: string) =>
-    request<ChatMessage>(`/channels/${channelId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+  // Since Phase 1 the document text is owned by the CRDT and persisted by
+  // the server, so callers normally send only `language` here.
+  saveCode: (channelId: string, payload: { content?: string; language?: string }) =>
+    request<CodeDocument>(`/channels/${channelId}/code`, { method: 'PUT', body: JSON.stringify(payload) }),
+
+  listMessages: (channelId: string, opts?: { limit?: number; before?: string }) =>
+    request<MessagePage<ChatMessage>>(withCursorQuery(`/channels/${channelId}/messages`, opts)),
+
+  sendMessage: (channelId: string, payload: SendMessagePayload) =>
+    request<ChatMessage>(`/channels/${channelId}/messages`, { method: 'POST', body: JSON.stringify(payload) }),
 
   listAccess: (channelId: string) => request<ChannelAccessGrant[]>(`/channels/${channelId}/access`),
 
@@ -101,6 +131,14 @@ export const channels = {
 
   revokeAccess: (channelId: string, accessId: string) =>
     request<{ message: string }>(`/channels/${channelId}/access/${accessId}`, { method: 'DELETE' }),
+
+  markRead: (channelId: string) => request<{ ok: true }>(`/channels/${channelId}/read`, { method: 'POST' }),
+
+  listMembers: (channelId: string) => request<ChannelMember[]>(`/channels/${channelId}/members`),
+};
+
+export const chat = {
+  listOnline: () => request<string[]>('/chat/online'),
 };
 
 export const roles = {
@@ -113,6 +151,102 @@ export const roles = {
 
   removeUser: (roleId: string, userId: string) =>
     request<{ message: string }>(`/roles/${roleId}/users/${userId}`, { method: 'DELETE' }),
+};
+
+export const roadmaps = {
+  list: () => request<RoadmapSummary[]>('/roadmaps'),
+
+  get: (id: string) => request<RoadmapDetail>(`/roadmaps/${id}`),
+
+  create: (name: string, description?: string) =>
+    request<RoadmapSummary>('/roadmaps', { method: 'POST', body: JSON.stringify({ name, description }) }),
+
+  remove: (id: string) => request<{ message: string }>(`/roadmaps/${id}`, { method: 'DELETE' }),
+
+  createCategory: (roadmapId: string, name: string) =>
+    request<RoadmapCategoryDetail>(`/roadmaps/${roadmapId}/categories`, { method: 'POST', body: JSON.stringify({ name }) }),
+
+  removeCategory: (categoryId: string) =>
+    request<{ message: string }>(`/roadmaps/categories/${categoryId}`, { method: 'DELETE' }),
+
+  createTopic: (categoryId: string, title: string, description?: string) =>
+    request<RoadmapTopic>(`/roadmaps/categories/${categoryId}/topics`, { method: 'POST', body: JSON.stringify({ title, description }) }),
+
+  removeTopic: (topicId: string) =>
+    request<{ message: string }>(`/roadmaps/topics/${topicId}`, { method: 'DELETE' }),
+
+  setProgress: (topicId: string, completed: boolean) =>
+    request<{ completed: boolean; memoryPercent: number }>(`/roadmaps/topics/${topicId}/progress`, {
+      method: 'PATCH',
+      body: JSON.stringify({ completed }),
+    }),
+
+  revisit: (topicId: string) =>
+    request<{ revisitCount: number; memoryPercent: number }>(`/roadmaps/topics/${topicId}/revisit`, { method: 'POST' }),
+};
+
+export const friends = {
+  sendRequest: (receiverId: string) =>
+    request<FriendRequestData>('/friends/requests', { method: 'POST', body: JSON.stringify({ receiverId }) }),
+
+  listIncoming: () => request<FriendRequestData[]>('/friends/requests/incoming'),
+
+  listOutgoing: () => request<FriendRequestData[]>('/friends/requests/outgoing'),
+
+  respond: (requestId: string, status: 'ACCEPTED' | 'DECLINED') =>
+    request<FriendRequestData>(`/friends/requests/${requestId}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  cancel: (requestId: string) =>
+    request<{ message: string }>(`/friends/requests/${requestId}`, { method: 'DELETE' }),
+
+  list: () => request<FriendUser[]>('/friends'),
+
+  remove: (userId: string) => request<{ message: string }>(`/friends/${userId}`, { method: 'DELETE' }),
+
+  listMessages: (userId: string, opts?: { limit?: number; before?: string }) =>
+    request<MessagePage<DirectMessageData>>(withCursorQuery(`/friends/${userId}/messages`, opts)),
+
+  sendMessage: (userId: string, payload: SendMessagePayload) =>
+    request<DirectMessageData>(`/friends/${userId}/messages`, { method: 'POST', body: JSON.stringify(payload) }),
+
+  markRead: (userId: string) => request<{ ok: true }>(`/friends/${userId}/read`, { method: 'POST' }),
+};
+
+export const notifications = {
+  summary: () => request<NotificationSummary>('/notifications/summary'),
+};
+
+export const settings = {
+  get: () => request<UserSettings>('/users/me/settings'),
+
+  update: (patch: Partial<UserSettings>) =>
+    request<UserSettings>('/users/me/settings', { method: 'PATCH', body: JSON.stringify(patch) }),
+};
+
+export interface UploadResult {
+  url: string;
+  type: AttachmentType;
+  name: string;
+}
+
+export const uploads = {
+  // Raw fetch, not the shared `request` helper -- a FormData body needs the
+  // browser to set Content-Type itself (multipart/form-data with a boundary
+  // token), which the helper's hardcoded 'application/json' header would break.
+  upload: async (file: File): Promise<UploadResult> => {
+    const token = getToken();
+    const body = new FormData();
+    body.append('file', file);
+
+    const res = await fetch(`${getApiBaseUrl()}/uploads`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Upload failed');
+    return data;
+  },
 };
 
 export const tasks = {

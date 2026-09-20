@@ -112,7 +112,18 @@ export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormPro
 
       <div className="space-y-1">
         <label className="block text-xs text-green-700 uppercase tracking-widest">// email</label>
-        <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className={inputCls} placeholder="user@domain.com" />
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          className={inputCls}
+          placeholder="user@domain.com"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="email"
+        />
       </div>
 
       <div className="space-y-1">
@@ -125,6 +136,10 @@ export default function AuthForm({ mode, onSubmit, error, loading }: AuthFormPro
             onChange={e => setPassword(e.target.value)}
             className={`${inputCls} pr-10`}
             placeholder="••••••••"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
           <button type="button" onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-green-800 hover:text-green-500 transition-colors">

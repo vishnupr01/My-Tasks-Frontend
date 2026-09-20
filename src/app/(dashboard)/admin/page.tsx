@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { admin, roles as rolesApi } from '@/lib/api';
 import { isAuthenticated, getUser } from '@/lib/auth';
 import UserPicker from '@/components/UserPicker';
+import ConfirmModal from '@/components/ConfirmModal';
+import { TrashIcon } from '@/components/Icons';
 import type { AccessRequest, InviteCode, Member, Role } from '@/types';
 
 export default function AdminPage() {
@@ -19,6 +21,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmDeleteCode, setConfirmDeleteCode] = useState<string | null>(null);
+  const [confirmDeleteAllCodes, setConfirmDeleteAllCodes] = useState(false);
 
   const selfId = getUser()?.id;
 
@@ -65,6 +69,19 @@ export default function AdminPage() {
     navigator.clipboard?.writeText(code);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  const executeDeleteCode = async () => {
+    if (!confirmDeleteCode) return;
+    await admin.deleteInviteCode(confirmDeleteCode);
+    setCodes(prev => prev.filter(c => c.id !== confirmDeleteCode));
+    setConfirmDeleteCode(null);
+  };
+
+  const executeDeleteAllCodes = async () => {
+    await admin.deleteAllInviteCodes();
+    setCodes([]);
+    setConfirmDeleteAllCodes(false);
   };
 
   const toggleActive = async (id: string, current: boolean) => {
@@ -134,12 +151,12 @@ export default function AdminPage() {
 
           <div className="space-y-2">
             {pending.map(r => (
-              <div key={r.id} className="flex items-center justify-between border border-green-900/40 rounded-sm px-3 py-2.5">
-                <div>
-                  <p className="text-green-300 text-sm">{r.email}</p>
+              <div key={r.id} className="flex items-center justify-between flex-wrap gap-2 border border-green-900/40 rounded-sm px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-green-300 text-sm truncate">{r.email}</p>
                   <p className="text-green-900 text-xs">{new Date(r.createdAt).toLocaleString()}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => decide(r.id, 'APPROVED')}
                     className="text-xs px-3 py-1.5 bg-green-500 text-black font-bold rounded-sm hover:bg-green-400 transition-colors uppercase tracking-wide"
@@ -176,13 +193,23 @@ export default function AdminPage() {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-green-500 text-xs uppercase tracking-widest">invite_codes</h2>
-            <button
-              onClick={generateCode}
-              disabled={generating}
-              className="text-xs px-3 py-1.5 bg-green-500 text-black font-bold rounded-sm hover:bg-green-400 disabled:opacity-40 transition-colors uppercase tracking-wide"
-            >
-              {generating ? 'generating...' : '+ generate'}
-            </button>
+            <div className="flex items-center gap-2">
+              {codes.length > 0 && (
+                <button
+                  onClick={() => setConfirmDeleteAllCodes(true)}
+                  className="text-xs px-3 py-1.5 border border-red-900/50 text-red-500 hover:bg-red-950/30 hover:border-red-700 rounded-sm transition-colors uppercase tracking-wide"
+                >
+                  delete all
+                </button>
+              )}
+              <button
+                onClick={generateCode}
+                disabled={generating}
+                className="text-xs px-3 py-1.5 bg-green-500 text-black font-bold rounded-sm hover:bg-green-400 disabled:opacity-40 transition-colors uppercase tracking-wide"
+              >
+                {generating ? 'generating...' : '+ generate'}
+              </button>
+            </div>
           </div>
 
           {codes.length === 0 && (
@@ -191,8 +218,8 @@ export default function AdminPage() {
 
           <div className="space-y-2">
             {codes.map(c => (
-              <div key={c.id} className="flex items-center justify-between border border-green-900/40 rounded-sm px-3 py-2.5">
-                <div>
+              <div key={c.id} className="flex items-center justify-between flex-wrap gap-2 border border-green-900/40 rounded-sm px-3 py-2.5">
+                <div className="min-w-0">
                   <button
                     onClick={() => copyCode(c.code, c.id)}
                     className="text-green-300 text-sm font-bold tracking-wider hover:text-green-400 transition-colors"
@@ -202,9 +229,18 @@ export default function AdminPage() {
                   </button>
                   <p className="text-green-900 text-xs">{new Date(c.createdAt).toLocaleString()}</p>
                 </div>
-                <span className={`text-xs ${c.usedBy ? 'text-green-900' : 'text-green-600'}`}>
-                  {c.usedBy ? `used by @${c.usedBy.username}` : 'unused'}
-                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className={`text-xs truncate max-w-[9rem] ${c.usedBy ? 'text-green-900' : 'text-green-600'}`}>
+                    {c.usedBy ? `used by @${c.usedBy.username}` : 'unused'}
+                  </span>
+                  <button
+                    onClick={() => setConfirmDeleteCode(c.id)}
+                    title="delete code"
+                    className="text-green-900 hover:text-red-500 transition-colors"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -278,14 +314,14 @@ export default function AdminPage() {
 
           <div className="space-y-2">
             {members.map(m => (
-              <div key={m.id} className="flex items-center justify-between border border-green-900/40 rounded-sm px-3 py-2.5">
-                <div>
-                  <p className="text-green-300 text-sm">
+              <div key={m.id} className="flex items-center justify-between flex-wrap gap-2 border border-green-900/40 rounded-sm px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-green-300 text-sm truncate">
                     @{m.username} {m.isAdmin && <span className="text-yellow-500 text-xs">[admin]</span>}
                   </p>
-                  <p className="text-green-900 text-xs">{m.email}</p>
+                  <p className="text-green-900 text-xs truncate">{m.email}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 shrink-0">
                   <span className={`text-xs ${m.isActive ? 'text-green-600' : 'text-red-500'}`}>
                     {m.isActive ? 'active' : 'removed'}
                   </span>
@@ -307,6 +343,26 @@ export default function AdminPage() {
           </div>
         </section>
       </main>
+
+      {confirmDeleteCode && (
+        <ConfirmModal
+          message="delete this invite code?"
+          subtext="anyone holding this code will no longer be able to use it to register."
+          confirmLabel="delete"
+          onConfirm={executeDeleteCode}
+          onCancel={() => setConfirmDeleteCode(null)}
+        />
+      )}
+
+      {confirmDeleteAllCodes && (
+        <ConfirmModal
+          message={`delete all ${codes.length} invite codes?`}
+          subtext="every unused and used code will be removed."
+          confirmLabel="delete all"
+          onConfirm={executeDeleteAllCodes}
+          onCancel={() => setConfirmDeleteAllCodes(false)}
+        />
+      )}
     </div>
   );
 }

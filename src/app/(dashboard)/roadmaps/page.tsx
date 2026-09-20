@@ -3,21 +3,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { channels as channelsApi } from '@/lib/api';
+import { roadmaps as roadmapsApi } from '@/lib/api';
 import { isAuthenticated, getUser } from '@/lib/auth';
-import { LockIcon, HashIcon, CodeIcon } from '@/components/Icons';
-import type { Channel, ChannelKind } from '@/types';
+import type { RoadmapSummary } from '@/types';
 
-export default function ChannelsPage() {
+export default function RoadmapsPage() {
   const router = useRouter();
-  const [list, setList] = useState<Channel[]>([]);
+  const [list, setList] = useState<RoadmapSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [kind, setKind] = useState<ChannelKind>('TEXT');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,7 +23,7 @@ export default function ChannelsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setList(await channelsApi.list()); }
+    try { setList(await roadmapsApi.list()); }
     catch { /* ignore */ }
     finally { setLoading(false); }
   }, []);
@@ -38,15 +35,13 @@ export default function ChannelsPage() {
     setError('');
     setCreating(true);
     try {
-      const ch = await channelsApi.create(name.trim(), isPrivate, description.trim() || undefined, kind);
-      setList(prev => [...prev, ch]);
+      const rm = await roadmapsApi.create(name.trim(), description.trim() || undefined);
+      setList(prev => [...prev, { ...rm, _count: { categories: 0 } }]);
       setShowCreate(false);
       setName('');
       setDescription('');
-      setIsPrivate(false);
-      setKind('TEXT');
     } catch (err: any) {
-      setError(err.message || 'Failed to create channel');
+      setError(err.message || 'Failed to create roadmap');
     } finally {
       setCreating(false);
     }
@@ -57,8 +52,8 @@ export default function ChannelsPage() {
       <header className="border-b border-green-900/40 bg-black">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div>
-            <span className="text-green-400 font-bold tracking-widest text-sm">CHANNELS</span>
-            <span className="text-green-900 text-xs hidden sm:inline ml-2">// text channels</span>
+            <span className="text-green-400 font-bold tracking-widest text-sm">ROADMAPS</span>
+            <span className="text-green-900 text-xs hidden sm:inline ml-2">// interview prep by stack</span>
           </div>
           {isAdmin && (
             <button
@@ -80,28 +75,20 @@ export default function ChannelsPage() {
         )}
 
         {!loading && list.length === 0 && (
-          <p className="text-xs text-green-950 py-4">// no channels yet{isAdmin ? ' -- create one to get started' : ''}</p>
+          <p className="text-xs text-green-950 py-4">// no roadmaps yet{isAdmin ? ' -- create one to get started' : ''}</p>
         )}
 
-        {!loading && list.map(ch => (
+        {!loading && list.map(rm => (
           <Link
-            key={ch.id}
-            href={`/channels/${ch.id}`}
+            key={rm.id}
+            href={`/roadmaps/${rm.id}`}
             className="flex items-center justify-between border border-green-900/40 rounded-sm px-3 py-2.5 hover:border-green-700/60 hover:bg-green-950/10 transition-colors"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-green-600">
-                {ch.kind === 'CODE' ? <CodeIcon /> : ch.isPrivate ? <LockIcon /> : <HashIcon />}
-              </span>
-              <div>
-                <p className="text-green-300 text-sm">{ch.name}</p>
-                {ch.description && <p className="text-green-900 text-xs">{ch.description}</p>}
-              </div>
+            <div>
+              <p className="text-green-300 text-sm">{rm.name}</p>
+              {rm.description && <p className="text-green-900 text-xs">{rm.description}</p>}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {ch.kind === 'CODE' && <span className="text-[10px] text-green-600 uppercase tracking-widest">code</span>}
-              {ch.isPrivate && <span className="text-[10px] text-green-800 uppercase tracking-widest">locked</span>}
-            </div>
+            <span className="text-[10px] text-green-800 uppercase tracking-widest">{rm._count.categories} categories</span>
           </Link>
         ))}
       </main>
@@ -111,7 +98,7 @@ export default function ChannelsPage() {
           onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
           <div className="bg-black border border-green-900/60 rounded-sm w-full max-w-md">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-green-900/40 bg-green-950/10">
-              <span className="text-green-600 text-xs font-bold tracking-widest">create_channel</span>
+              <span className="text-green-600 text-xs font-bold tracking-widest">create_roadmap</span>
               <button onClick={() => setShowCreate(false)} className="text-green-900 hover:text-green-500 text-xs">[esc]</button>
             </div>
             <form onSubmit={handleCreate} className="p-4 space-y-3">
@@ -120,7 +107,7 @@ export default function ChannelsPage() {
                 <input
                   type="text" required value={name} onChange={e => setName(e.target.value)}
                   className="w-full px-3 py-2 bg-black border border-green-900 rounded-sm text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 font-mono text-sm"
-                  placeholder="general"
+                  placeholder="MERN Stack"
                 />
               </div>
               <div className="space-y-1">
@@ -128,37 +115,9 @@ export default function ChannelsPage() {
                 <input
                   type="text" value={description} onChange={e => setDescription(e.target.value)}
                   className="w-full px-3 py-2 bg-black border border-green-900 rounded-sm text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 font-mono text-sm"
-                  placeholder="what's this channel for"
+                  placeholder="what's this roadmap for"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="block text-xs text-green-700 uppercase tracking-widest">// type</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { value: 'TEXT' as const, label: 'chat', hint: 'messages only' },
-                    { value: 'CODE' as const, label: 'code', hint: 'chat + shared editor' },
-                  ]).map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setKind(opt.value)}
-                      className={`px-3 py-2 rounded-sm border text-left transition-colors ${
-                        kind === opt.value
-                          ? 'border-green-600 bg-green-950/30 text-green-300'
-                          : 'border-green-900/50 text-green-800 hover:border-green-800'
-                      }`}
-                    >
-                      <span className="block text-xs font-bold uppercase tracking-widest">{opt.label}</span>
-                      <span className="block text-[10px] text-green-900">{opt.hint}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 text-xs text-green-700">
-                <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="accent-green-500" />
-                locked (only people/roles I grant can see it)
-              </label>
 
               {error && (
                 <div className="flex items-center gap-2 p-2.5 bg-red-950/30 border border-red-800/50 rounded-sm text-sm text-red-400">

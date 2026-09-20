@@ -56,6 +56,10 @@ export default function RequestAccessPage() {
                 onChange={e => setEmail(e.target.value)}
                 className="w-full px-3 py-2.5 bg-black border border-green-900 rounded text-green-300 placeholder-green-900 focus:outline-none focus:border-green-500 focus:shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.2*var(--glow-mult)))] transition-all font-mono text-sm"
                 placeholder="user@domain.com"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="email"
               />
             </div>
 

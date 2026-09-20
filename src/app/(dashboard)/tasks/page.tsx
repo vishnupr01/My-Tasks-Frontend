@@ -149,7 +149,7 @@ export default function TasksPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-4">
 
         {/* Stats */}
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
             { label: 'TOTAL',  value: total,              valueColor: 'text-green-400',  borderColor: 'border-green-900/50',  labelColor: 'text-green-800' },
             { label: 'TODO',   value: todo.length,        valueColor: 'text-green-600',  borderColor: 'border-green-900/40',  labelColor: 'text-green-900' },

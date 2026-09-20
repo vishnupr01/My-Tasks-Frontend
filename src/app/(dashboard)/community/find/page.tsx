@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { users as usersApi } from '@/lib/api';
+import { users as usersApi, friends as friendsApi } from '@/lib/api';
 import { isAuthenticated } from '@/lib/auth';
 
 interface UserResult {
@@ -11,12 +11,16 @@ interface UserResult {
   username: string;
 }
 
+type AddStatus = 'idle' | 'sending' | 'sent' | 'error';
+
 export default function FindUsersPage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<UserResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [addStatus, setAddStatus] = useState<Record<string, AddStatus>>({});
+  const [addError, setAddError] = useState<Record<string, string>>({});
 
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -46,6 +50,17 @@ export default function FindUsersPage() {
 
     return () => { if (debounce.current) clearTimeout(debounce.current); };
   }, [query]);
+
+  const sendRequest = async (userId: string) => {
+    setAddStatus(prev => ({ ...prev, [userId]: 'sending' }));
+    try {
+      await friendsApi.sendRequest(userId);
+      setAddStatus(prev => ({ ...prev, [userId]: 'sent' }));
+    } catch (err: any) {
+      setAddStatus(prev => ({ ...prev, [userId]: 'error' }));
+      setAddError(prev => ({ ...prev, [userId]: err.message || 'Failed to send request' }));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black font-mono">
@@ -78,26 +93,39 @@ export default function FindUsersPage() {
 
         {!loading && results.length > 0 && (
           <div className="space-y-2">
-            {results.map(u => (
-              <div key={u.id} className="flex items-center justify-between border border-green-900/40 rounded-sm px-3 py-2.5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-sm bg-green-950/30 border border-green-900/50 flex items-center justify-center text-green-500 text-xs font-bold">
-                    {(u.name || u.username)[0]?.toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-green-300 text-sm">{u.name || u.username}</p>
-                    <p className="text-green-800 text-xs">@{u.username}</p>
-                  </div>
-                </div>
-                <button
-                  disabled
-                  title="friend requests coming soon"
-                  className="text-xs text-green-950 border border-green-950 px-3 py-1.5 rounded-sm cursor-not-allowed"
+            {results.map((u, i) => {
+              const status = addStatus[u.id] ?? 'idle';
+              return (
+                <div
+                  key={u.id}
+                  className="flex items-center justify-between flex-wrap gap-2 border border-green-900/40 rounded-sm px-3 py-2.5 hover-lift hover:border-green-700/60 animate-enter"
+                  style={{ animationDelay: `${i * 40}ms` }}
                 >
-                  + add
-                </button>
-              </div>
-            ))}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-sm bg-green-950/30 border border-green-900/50 flex items-center justify-center text-green-500 text-xs font-bold shrink-0">
+                      {(u.name || u.username)[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-green-300 text-sm truncate">{u.name || u.username}</p>
+                      <p className="text-green-800 text-xs truncate">@{u.username}</p>
+                    </div>
+                  </div>
+                  {status === 'sent' ? (
+                    <span className="text-xs text-green-600 uppercase tracking-wide shrink-0">request sent</span>
+                  ) : status === 'error' ? (
+                    <span className="text-xs text-red-500 shrink-0" title={addError[u.id]}>failed</span>
+                  ) : (
+                    <button
+                      onClick={() => sendRequest(u.id)}
+                      disabled={status === 'sending'}
+                      className="text-xs text-green-400 border border-green-700 px-3 py-1.5 rounded-sm hover:bg-green-950/30 hover:border-green-500 disabled:opacity-40 shadow-[0_0_8px_rgba(var(--glow-rgb),calc(0.15*var(--glow-mult)))] transition-all uppercase tracking-wide shrink-0"
+                    >
+                      {status === 'sending' ? 'sending...' : '+ add'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -64,7 +64,7 @@ export default function TaskCard({ task, onDelete, onStatusChange, onSubTaskAdd,
           <h3 className={`flex-1 text-sm leading-snug ${task.status === 'DONE' ? 'line-through text-green-900' : 'text-green-300'}`}>
             {task.title}
           </h3>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
             <Link href={`/tasks/${task.id}`}
               className="text-green-900 hover:text-green-500 transition-colors text-xs px-1" title="edit">
               [edit]
@@ -104,7 +104,7 @@ export default function TaskCard({ task, onDelete, onStatusChange, onSubTaskAdd,
 
           <div className="flex items-center gap-2">
             <button onClick={() => { setSubTasksOpen(true); setAddingSubTask(true); }}
-              className="text-green-900 hover:text-green-500 transition-colors text-xs opacity-0 group-hover:opacity-100">
+              className="text-green-900 hover:text-green-500 transition-colors text-xs opacity-100 md:opacity-0 md:group-hover:opacity-100">
               [+sub]
             </button>
             <button onClick={() => onStatusChange(task.id, status.next)}
@@ -128,7 +128,7 @@ export default function TaskCard({ task, onDelete, onStatusChange, onSubTaskAdd,
                 {sub.title}
               </span>
               <button onClick={() => onSubTaskDelete(task.id, sub.id)}
-                className="text-green-950 hover:text-red-600 text-xs opacity-0 group-hover/sub:opacity-100 transition-all">
+                className="text-green-950 hover:text-red-600 text-xs opacity-100 md:opacity-0 md:group-hover/sub:opacity-100 transition-all">
                 [x]
               </button>
             </div>
